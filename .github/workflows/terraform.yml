@@ -55,6 +55,16 @@ jobs:
             -var-file="./envs/${{ inputs.environment }}/terraform.tfvars" \
             -target=aws_ecr_repository.this \
             -auto-approve
+        
+      - name: Get ECR URL from Terraform Output
+        id: ecr-output
+        run: |
+          cd infra
+          url=$(terraform output -raw ecr_repository_url)
+          echo "url=$url" >> $GITHUB_OUTPUT
+
+    outputs:
+      ecr-url: ${{ steps.ecr-output.outputs.url }}
 
   build-and-push:
     needs: terraform-bootstrap
@@ -63,21 +73,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.8.3
-          
+
       - name: Build and Push Step
         run: echo "Build and Push step executed after Terraform job."
 
-      - name: Get ECR URL from Terraform Output
-        if: steps.read-destroy-config.outputs.destroy != 'true'
-        id: ecr-output
-        run: |
-          cd infra
-          ECR_URL=$(terraform output -raw ecr_repository_url)
-          echo "url=$ECR_URL" >> $GITHUB_OUTPUT
 
       - name: Login to Amazon ECR
         if: steps.read-destroy-config.outputs.destroy != 'true'
@@ -89,13 +88,13 @@ jobs:
         if: steps.read-destroy-config.outputs.destroy != 'true'
         run: |
           docker build \
-            -t ${{ steps.ecr-output.outputs.url }}:latest \
+            -t ${{ needs.terraform-bootstrap.outputs.ecr-url }}:latest \
             .
 
       - name: Push Docker Image to ECR
         if: steps.read-destroy-config.outputs.destroy != 'true'
         run: |
-          docker push ${{ steps.ecr-output.outputs.url }}:latest
+          docker push ${{ needs.terraform-bootstrap.outputs.ecr-url }}:latest
 
   terraform:
     needs:
