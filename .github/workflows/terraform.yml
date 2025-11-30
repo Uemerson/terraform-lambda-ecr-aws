@@ -53,7 +53,7 @@ jobs:
           terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }}
           terraform apply \
             -var-file="./envs/${{ inputs.environment }}/terraform.tfvars" \
-            -target=aws_ecr_repository.this \
+            -target=aws_ecr_repository.ecr_repository \
             -auto-approve
         
       - name: Get ECR URL from Terraform Output
