@@ -60,6 +60,9 @@ jobs:
     needs: terraform-bootstrap
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Build and Push Step
         run: echo "Build and Push step executed after Terraform job."
 
