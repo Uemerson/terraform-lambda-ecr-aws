@@ -63,6 +63,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.3
+          
       - name: Build and Push Step
         run: echo "Build and Push step executed after Terraform job."
 
